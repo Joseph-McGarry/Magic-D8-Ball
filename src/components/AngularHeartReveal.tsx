@@ -45,7 +45,14 @@ export default function AngularHeartReveal({
 
       {label ? (
         <View style={styles.labelWrap} pointerEvents="none">
-          <Text style={[styles.label, { color: "#fff" }]}>{label}</Text>
+          <Text
+            style={[styles.label, { color: "#fff" }]}
+            adjustsFontSizeToFit
+            numberOfLines={4}
+            minimumFontScale={0.45}
+          >
+            {label}
+          </Text>
         </View>
       ) : null}
     </View>
@@ -61,9 +68,14 @@ const styles = StyleSheet.create({
   },
   labelWrap: {
     position: "absolute",
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
     alignItems: "center",
     justifyContent: "center",
-    paddingHorizontal: 18,
+    paddingHorizontal: 72,
+    paddingVertical: 50,
   },
-  label: { fontSize: 26, fontWeight: "900", textAlign: "center", letterSpacing: 1.1 },
+  label: { fontSize: 20, fontWeight: "900", textAlign: "center" },
 });

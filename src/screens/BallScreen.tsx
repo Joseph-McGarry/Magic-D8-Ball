@@ -7,7 +7,6 @@ import * as Haptics from "expo-haptics";
 import { useTheme } from "../theme/useTheme";
 import { useAppStore, type Idea, type ReminderOffset } from "../state/store";
 import AngularHeartReveal from "../components/AngularHeartReveal";
-import IdeaCard from "../components/IdeaCard";
 import NeonButton from "../components/NeonButton";
 import FaceOffModal from "../components/FaceOffModal";
 import SaveDateModal from "../components/SaveDateModal";
@@ -104,12 +103,10 @@ export default function BallScreen() {
   const rippleOpacity = ripple.interpolate({ inputRange: [0, 1], outputRange: [0.35, 0] });
 
   const heartLabel = rollUI.ideas.length === 0
-    ? faceOffMode ? "FACE OFF" : "SHAKE"
+    ? faceOffMode ? "Face Off" : "Shake Me"
     : rollUI.ideas.length === 1
-    ? "DATE IDEA"
+    ? rollUI.ideas[0].title
     : "TWO IDEAS";
-
-  const selectedIdea = saveIdea;
 
   const openSave = (idea: Idea) => {
     setSaveIdea(idea);
@@ -119,8 +116,8 @@ export default function BallScreen() {
   const savePlan = useAppStore((s) => s.savePlan);
 
   const onConfirmSave = async (scheduledAtIso: string, reminderOffset: ReminderOffset, notes?: string) => {
-    if (!selectedIdea) return;
-    await savePlan({ idea: selectedIdea, scheduledAtIso, reminderOffset, notes });
+    if (!saveIdea) return;
+    await savePlan({ idea: saveIdea, scheduledAtIso, reminderOffset, notes });
   };
 
   const showEmpty = rollUI.error === "EMPTY_POOL";
@@ -128,20 +125,21 @@ export default function BallScreen() {
 
   return (
     <LinearGradient colors={t.background} style={styles.bg}>
-      <View style={styles.safePad}>
-        <Animated.View style={{ transform: [{ rotate: rotation }, { scale: rippleScale }] }}>
-          <AngularHeartReveal label={heartLabel} height={240} />
-          <Animated.View
-            pointerEvents="none"
-            style={[
-              styles.ripple,
-              { opacity: rippleOpacity, borderColor: t.glow, shadowColor: t.glow },
-            ]}
-          />
-        </Animated.View>
+      <View style={styles.container}>
+
+        {/* Heart — tap to roll / re-roll */}
+        <Pressable onPress={doRoll} disabled={locked} style={{ width: "100%" }}>
+          <Animated.View style={{ width: "100%", transform: [{ rotate: rotation }, { scale: rippleScale }] }}>
+            <AngularHeartReveal label={heartLabel} height={260} />
+            <Animated.View
+              pointerEvents="none"
+              style={[styles.ripple, { opacity: rippleOpacity, borderColor: t.glow, shadowColor: t.glow }]}
+            />
+          </Animated.View>
+        </Pressable>
 
         {showEmpty ? (
-          <GlassCard style={{ marginBottom: 12 }}>
+          <GlassCard style={{ marginBottom: 12, width: "100%" }}>
             <Text style={[styles.emptyTitle, { color: t.text }]}>Your pool is empty</Text>
             <Text style={[styles.emptySub, { color: t.mutedText }]}>
               Enable at least one category (or custom ideas) in Filter, and make sure excluded ideas are re-enabled in Settings → History.
@@ -150,7 +148,7 @@ export default function BallScreen() {
         ) : null}
 
         {showInsufficient ? (
-          <GlassCard style={{ marginBottom: 12 }}>
+          <GlassCard style={{ marginBottom: 12, width: "100%" }}>
             <Text style={[styles.emptyTitle, { color: t.text }]}>Not enough ideas for Face Off</Text>
             <Text style={[styles.emptySub, { color: t.mutedText }]}>
               Face Off needs at least 2 ideas in your pool. Enable more categories or add custom ideas in Filter.
@@ -158,30 +156,17 @@ export default function BallScreen() {
           </GlassCard>
         ) : null}
 
-        {rollUI.ideas.length === 1 ? (
-          <IdeaCard
-            title={rollUI.ideas[0].title}
-            category={rollUI.ideas[0].category}
-            onPress={() => openSave(rollUI.ideas[0])}
-          />
-        ) : null}
-
         {rollUI.ideas.length === 2 ? (
-          <View>
+          <View style={{ width: "100%", marginTop: 8 }}>
             <Text style={[styles.hint, { color: t.mutedText }]}>
-              Tap a card if you agree. Use Face Off if you disagree.
+              Tap an idea to save it, or use Face Off.
             </Text>
-            <IdeaCard
-              title={rollUI.ideas[0].title}
-              category={rollUI.ideas[0].category}
-              onPress={() => openSave(rollUI.ideas[0])}
-            />
-            <IdeaCard
-              title={rollUI.ideas[1].title}
-              category={rollUI.ideas[1].category}
-              onPress={() => openSave(rollUI.ideas[1])}
-            />
-
+            <Pressable onPress={() => openSave(rollUI.ideas[0])} style={[styles.ideaRow, { borderColor: t.glow }]}>
+              <Text style={[styles.ideaText, { color: t.text }]}>{rollUI.ideas[0].title}</Text>
+            </Pressable>
+            <Pressable onPress={() => openSave(rollUI.ideas[1])} style={[styles.ideaRow, { borderColor: t.glow }]}>
+              <Text style={[styles.ideaText, { color: t.text }]}>{rollUI.ideas[1].title}</Text>
+            </Pressable>
             <NeonButton
               label="Face Off"
               onPress={() => {
@@ -197,10 +182,18 @@ export default function BallScreen() {
           </View>
         ) : null}
 
-        <View style={styles.bottomRow}>
-          <NeonButton label={locked ? "Rolling…" : "Roll"} onPress={doRoll} style={{ flex: 1 }} disabled={locked} />
-        </View>
       </View>
+
+      {/* Save This Date — appears after a single idea is rolled */}
+      {rollUI.ideas.length === 1 ? (
+        <View style={styles.bottomRow}>
+          <NeonButton
+            label="Save This Date"
+            onPress={() => openSave(rollUI.ideas[0])}
+            style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.65)" }}
+          />
+        </View>
+      ) : null}
 
       {/* FaceOff */}
       {rollUI.ideas.length === 2 ? (
@@ -231,7 +224,14 @@ export default function BallScreen() {
 
 const styles = StyleSheet.create({
   bg: { flex: 1 },
-  safePad: { flex: 1, paddingTop: 60, paddingHorizontal: 18, paddingBottom: 110 },
+  container: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    paddingHorizontal: 18,
+    paddingBottom: 110,
+  },
   bottomRow: { position: "absolute", left: 18, right: 18, bottom: 92 },
   ripple: {
     position: "absolute",
@@ -248,4 +248,13 @@ const styles = StyleSheet.create({
   hint: { fontSize: 12, marginBottom: 10, fontWeight: "700" },
   emptyTitle: { fontSize: 16, fontWeight: "900" },
   emptySub: { marginTop: 8, fontSize: 12, lineHeight: 16 },
+  ideaRow: {
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    borderRadius: 14,
+    borderWidth: 1,
+    backgroundColor: "rgba(0,0,0,0.35)",
+    marginBottom: 10,
+  },
+  ideaText: { fontSize: 15, fontWeight: "800", textAlign: "center" },
 });
