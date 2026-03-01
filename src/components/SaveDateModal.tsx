@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { Modal, View, Text, StyleSheet, TextInput, Platform } from "react-native";
+import { Modal, View, Text, StyleSheet, TextInput, Platform, KeyboardAvoidingView, ScrollView, Keyboard, Pressable } from "react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import GlassCard from "./GlassCard";
 import NeonButton from "./NeonButton";
@@ -43,8 +43,16 @@ export default function SaveDateModal({
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View style={styles.backdrop}>
-        <View style={styles.sheet}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
+      >
+        <Pressable style={styles.backdrop} onPress={Keyboard.dismiss}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          keyboardShouldPersistTaps="handled"
+        >
+        <Pressable style={styles.sheet} onPress={() => {}}>
           <GlassCard>
             <Text style={[styles.title, { color: t.text }]}>Save this date</Text>
             <Text style={[styles.sub, { color: t.mutedText }]} numberOfLines={2}>
@@ -89,6 +97,8 @@ export default function SaveDateModal({
                 placeholderTextColor="rgba(255,255,255,0.45)"
                 style={[styles.input, { color: t.text, borderColor: "rgba(255,255,255,0.20)" }]}
                 multiline
+                blurOnSubmit
+                returnKeyType="done"
               />
             </View>
 
@@ -104,14 +114,18 @@ export default function SaveDateModal({
               />
             </View>
           </GlassCard>
-        </View>
-      </View>
+        </Pressable>
+        </ScrollView>
+        </Pressable>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
-  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.62)", justifyContent: "center", padding: 18 },
+  flex: { flex: 1 },
+  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.62)" },
+  scroll: { flexGrow: 1, justifyContent: "center", padding: 18 },
   sheet: { width: "100%", maxWidth: 520, alignSelf: "center" },
   title: { fontSize: 20, fontWeight: "900" },
   sub: { marginTop: 6, fontSize: 13 },
