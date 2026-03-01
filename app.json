@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "Magic D8 Ball",
+    "slug": "magic-d8ball",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "scheme": "magicd8ball",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      }
+    },
+    "plugins": [],
+    "extra": {}
+  }
+}
